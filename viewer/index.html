@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Gaussian Splatting Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        #canvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // Initialize scene
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        
+        // Global variables for camera control
+        window.viewer = {
+            scene: scene,
+            camera: camera,
+            renderer: renderer,
+            controls: null,
+            splatMesh: null,
+            isReady: false
+        };
+        
+        // Function to load points (will be called from Python)
+        window.loadPoints = function(points, center, radius) {
+            try {
+                console.log('Loading points:', points.length);
+                
+                // Create geometry from points
+                const geometry = new THREE.BufferGeometry();
+                const positions = new Float32Array(points.length * 3);
+                const colors = new Float32Array(points.length * 3);
+                
+                for (let i = 0; i < points.length; i++) {
+                    positions[i * 3] = points[i][0];
+                    positions[i * 3 + 1] = points[i][1];
+                    positions[i * 3 + 2] = points[i][2];
+                    
+                    // Simple colors
+                    colors[i * 3] = 0.8;
+                    colors[i * 3 + 1] = 0.8;
+                    colors[i * 3 + 2] = 0.9;
+                }
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
+                // Create material
+                const material = new THREE.PointsMaterial({
+                    size: 0.5,
+                    vertexColors: true,
+                    sizeAttenuation: true
+                });
+                
+                const pointsMesh = new THREE.Points(geometry, material);
+                scene.add(pointsMesh);
+                
+                window.viewer.splatMesh = pointsMesh;
+                
+                // Setup camera
+                camera.position.set(center[0], center[1], center[2] + radius * 1.5);
+                camera.lookAt(center[0], center[1], center[2]);
+                
+                window.viewer.isReady = true;
+                console.log('Points loaded successfully, scene ready');
+            } catch (error) {
+                console.error('Error loading points:', error);
+                window.viewer.isReady = false;
+            }
+        };
+        
+        // Function to set camera position
+        window.setCameraPosition = function(position, lookAt) {
+            if (!window.viewer.isReady) {
+                console.warn('Viewer not ready yet');
+                return;
+            }
+            
+            camera.position.set(position[0], position[1], position[2]);
+            
+            if (lookAt) {
+                camera.lookAt(lookAt[0], lookAt[1], lookAt[2]);
+            }
+            
+            // Update controls if they exist
+            if (window.viewer.controls) {
+                window.viewer.controls.update();
+            }
+            
+            // Render
+            renderer.render(scene, camera);
+        };
+        
+        // Function to capture screenshot
+        window.captureScreenshot = function() {
+            renderer.render(scene, camera);
+            return renderer.domElement.toDataURL('image/png');
+        };
+        
+        // Function to check readiness
+        window.isViewerReady = function() {
+            return window.viewer.isReady;
+        };
+        
+        // Initialize controls (optional, for interactivity)
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        window.viewer.controls = controls;
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        console.log('3D Gaussian Splatting Viewer initialized, Three.js:', typeof THREE !== 'undefined');
+    </script>
+</body>
+</html>

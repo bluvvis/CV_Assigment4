@@ -1,0 +1,80 @@
+# Configuration for 3D Gaussian Splatting Video Generation System
+
+# Video settings
+video:
+  width: 1920
+  height: 1080
+  fps: 30
+  codec: "libx264"
+  crf: 18  # High quality (lower = better quality, 18-23 is good range)
+  output_format: "mp4"
+
+# Scene exploration settings
+scene_explorer:
+  num_radii: 5  # Number of radius levels
+  num_angles: 20  # Number of angles per radius
+  num_heights: 5  # Number of height levels
+  min_radius_factor: 0.5  # Minimum radius as factor of scene radius
+  max_radius_factor: 2.0  # Maximum radius as factor of scene radius
+
+# Space analysis settings
+space_analyzer:
+  voxel_size: 2.0  # Size of voxel in meters (increased for large scenes)
+  density_threshold: 50  # Maximum points per voxel to consider as free space (increased)
+  floor_percentile: 10  # Percentile for floor detection (Y coordinate)
+  camera_height: 1.7  # Camera height above floor in meters
+  camera_height_tolerance: 0.2  # Tolerance for camera height range
+
+# Path planning settings
+path_planner:
+  # Flythrough settings (for interiors)
+  flythrough:
+    waypoint_spacing: 2.0  # Distance between waypoints in meters
+    smoothing_factor: 0.5  # Catmull-Rom spline smoothing
+    collision_check: true
+    collision_radius: 0.5  # Radius for collision checking
+  
+  # Orbital settings (for exteriors)
+  orbital:
+    num_orbits: 3
+    orbit_radius_factor: 1.5
+    spiral_height_range: 5.0  # Height range for spiral movement
+    num_spiral_points: 100
+
+# Object detection settings
+object_detection:
+  model: "yolov8n.pt"  # YOLOv8 model (nano version for speed)
+  confidence_threshold: 0.3
+  allowed_classes:
+    - "person"
+    - "chair"
+    - "couch"
+    - "table"
+    - "laptop"
+    - "keyboard"
+    - "mouse"
+    - "cell phone"
+    - "book"
+    - "tv"
+    - "monitor"
+    - "clock"
+    - "vase"
+    - "bottle"
+    - "cup"
+    - "bowl"
+  visualize: true  # Draw bounding boxes on frames
+
+# Rendering settings
+rendering:
+  browser_headless: true
+  screenshot_delay: 0.3  # Delay after camera movement before screenshot (seconds) - reduced for speed
+  render_timeout: 30  # Maximum time to wait for render (seconds)
+  output_frames_dir: "output/frames"
+  output_videos_dir: "output/videos"
+  output_reports_dir: "output/reports"
+
+# Scene settings
+scene:
+  default_scene: "Theater.splat"  # Default scene to process
+  scenes_dir: "."  # Directory containing .splat files
+
