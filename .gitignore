@@ -32,11 +32,11 @@ ENV/
 *.swo
 *~
 
-# Output files
-output/
-*.mp4
+# Output files - allow videos and JSON, but ignore frames
+output/frames/
 *.png
 *.jpg
+# Allow output/videos/*.mp4 and output/*.json
 
 # Large scene files (too big for git, use Git LFS if needed)
 *.splat
